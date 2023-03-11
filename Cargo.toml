@@ -1,0 +1,40 @@
+[package]
+name = "converza-backend"
+description = "This is the repository of the official backend of the Converza chat platform, written in Rust "
+version = "1.0.0-dev.1"
+edition = "2021"
+
+authors = ["Cedric Hammes <cach30verfl0w@gmail.com>", "Marlon Klaus <marlon.klaus@icloud.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/Converza/backend"
+
+[dependencies]
+rocket = { version = "0.5.0-rc.2", features = ["json"] }
+
+# Logging
+log = "0.4.17"
+simple_logger = "4.0.0"
+
+# API Documentation
+okapi = "0.7.0-rc.1"
+rocket_okapi = { version = "0.8.0-rc.2", features = ["swagger"] }
+schemars = "0.8.12"
+#
+# Authentication
+rust-argon2 = "1.0.0"
+rand = "0.8.5"
+jsonwebtoken = "8.2.0"
+
+# Better mutex struct and lazy_static
+lazy_static = "1.4.0"
+parking_lot = "0.12.1"
+
+# Encoding and unqiue tokens
+uuid = { version = "1.3.0", features = ["v4", "fast-rng"] }
+base64 = "0.21.0"
+
+# Other
+thiserror = "1.0.39"
+toml = "0.7.2"
+regex = "1.7.1"
+chrono = "0.4.23"
