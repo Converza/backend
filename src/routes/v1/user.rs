@@ -9,7 +9,7 @@ use crate::representation::models::Session;
 /// This API allows the user to change his username to the specified name
 #[openapi(tag = "User")]
 #[post("/change_username", data = "<username>")]
-pub fn change_username(session: Session, username: String, database: &State<DatabaseHolder>) -> Result<Value, Error> {
+fn change_username(session: Session, username: String, database: &State<DatabaseHolder>) -> Result<Value, Error> {
     let mut database = database.inner().0.lock();
     let user = database.find_user_by_id_mut(&session.user_id)?;
     user.username = username;

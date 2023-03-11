@@ -7,4 +7,6 @@ pub mod models;
 #[serde(crate = "rocket::serde")]
 pub enum Event {
     MessageReceived(String),
+    FriendRequest(String),
+    FriendRequestAccepted(String)
 }

@@ -112,7 +112,10 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub salt: String,
-    pub sender: Sender<Event>
+    pub sender: Sender<Event>, // TODO: Optimization ig: Option<Sender<Event>> and set it to None if the user is offline
+
+    pub friends: Vec<String>,
+    pub friend_requests: Vec<String>
 }
 
 impl User {
@@ -139,7 +142,9 @@ impl User {
             username,
             password: hash,
             salt,
-            sender: channel(1024).0
+            sender: channel(1024).0,
+            friends: Vec::new(),
+            friend_requests: Vec::new()
         })
     }
 

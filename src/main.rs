@@ -29,6 +29,7 @@ async fn main() {
             Box::new(InMemoryDatabase::new()),
         ))) // Create In-memory database to test the endpoints TODO: Add configurable MongoDB database
         .attach(AdHoc::config::<GeneralConfig>()) // Get configuration from Rocket.toml
+        .mount("/v1/friends", routes::v1::friends::routes())
         .mount("/v1/auth", routes::v1::auth::routes())
         .mount("/v1/user", routes::v1::user::routes())
         .mount("/", routes![routes::v1::events])

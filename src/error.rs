@@ -9,7 +9,7 @@ use rocket_okapi::{gen::OpenApiGenerator, response::OpenApiResponderInner};
 use schemars::_serde_json::json;
 use thiserror::Error;
 
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug)]
 pub enum Error {
     // Do not respond specific information about this error the user
     #[error("Error while hashing some password with Argon2")]
@@ -29,12 +29,18 @@ pub enum Error {
 
     #[error("The entered credentials are invalid!")]
     InvalidCredentials,
+
+    #[error("{0}")]
+    BadRequest(String),
+
+    #[error("{0}")]
+    Server(String)
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
     fn respond_to(self, _request: &'r Request<'_>) -> rocket::response::Result<'o> {
         let mut response = rocket::Response::new();
-        match self.clone() {
+        match &self {
             Self::WeakPassword(_) => response.set_status(Status::BadRequest),
             Self::AlreadyExisting(_) => response.set_status(Status::BadRequest),
             Self::NotFound(_) => response.set_status(Status::NotFound),
@@ -48,7 +54,13 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                 response.set_status(Status::InternalServerError);
                 log::error!("Error while interacting with the API:");
                 log::error!("   - {}", error);
+            },
+            Self::Server(error) => {
+                response.set_status(Status::InternalServerError);
+                log::error!("Error while interacting with the API:");
+                log::error!("   - {}", error);
             }
+            Self::BadRequest(_) => response.set_status(Status::BadRequest)
         }
 
         let content = match response.status().code {
