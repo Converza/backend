@@ -23,8 +23,8 @@ schemars = "0.8.12"
 # Authentication
 rust-argon2 = "1.0.0"
 jsonwebtoken = "8.2.0"
-trustifier = { git = "https://github.com/Converza/trustifier.git" }
-# trustifier = { path = "../trustifier" }
+trustifier = { git = "https://github.com/Converza/trustifier.git", features = ["hibp"] }
+# trustifier = { path = "../trustifier", features = ["hibp"] }
 
 # Better mutex struct and lazy_static
 lazy_static = "1.4.0"

@@ -24,13 +24,28 @@ async fn login(
     let user = database
         .find_account_by_email_mut(&request.email)
         .map_err(|_| Error::InvalidCredentials)?;
-    let session = user.login(trustifier_config, request.password.clone())?;
 
-    Ok(json!({
-        "code": 200,
-        "status": "Logged in",
-        "token": session.to_jwt(&trustifier_config.password_config)?
-    }))
+    match user.login(trustifier_config, request.password.clone()) {
+        Ok(session) => Ok(json!({
+            "code": 200,
+            "status": "Logged in",
+            "token": session.to_jwt(&trustifier_config.password_config)?
+        })),
+        Err((session, error)) => {
+            if session.is_none() {
+                return Err(error.into())
+            }
+
+            Ok(json!({
+                "code": 200,
+                "status": "Logged in",
+                "token": session.unwrap().to_jwt(&trustifier_config.password_config)?,
+                "extra": [
+                    "INSECURE_PASSWORD"
+                ]
+            }))
+        }
+    }
 }
 
 /// This is the endpoint for the user registration. If you create an account in the frontend or

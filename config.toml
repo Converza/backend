@@ -16,7 +16,7 @@ special = true
 numbers = true
 
 # Check HaveIBeenPwned.com
-check_hibp = true
+check_hibp = false
 
 [auth]
 # This is the session lifetime in days

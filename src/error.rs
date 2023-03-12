@@ -55,7 +55,9 @@ impl From<trustifier::error::Error> for Error {
             },
             trustifier::error::Error::Lockout => {
                 Error::BadRequest(String::from("Your account is currently in a lockout!"))
-            }
+            },
+            trustifier::error::Error::UnsecurePassword => Error::Unauthorized(String::from("The entered password is insecure! Please change it!")),
+            trustifier::error::Error::Request(_) => Error::Server(String::from("Unable to create request"))
         }
     }
 }
