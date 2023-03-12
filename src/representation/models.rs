@@ -1,28 +1,6 @@
-use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation};
-use okapi::{
-    openapi3::{Parameter, ParameterValue},
-    Map,
-};
-use rand::{distributions::Alphanumeric, Rng};
-use rocket::{
-    http::Status,
-    outcome::Outcome::Success,
-    request::{FromRequest, Outcome},
-    serde::{Deserialize, Serialize},
-    Request,
-};
-use rocket::tokio::sync::broadcast::{channel, Sender};
-use rocket_okapi::{
-    gen::OpenApiGenerator,
-    request::{OpenApiFromRequest, RequestHeaderInput},
-};
+use rocket::{serde::Deserialize, tokio::sync::broadcast::Sender};
 use schemars::JsonSchema;
-use uuid::Uuid;
 
-use crate::{
-    error::Error,
-    representation::config::{AuthConfig, GeneralConfig, HashConfig},
-};
 use crate::representation::Event;
 
 #[derive(Clone, JsonSchema, Deserialize)]
@@ -42,5 +20,7 @@ pub struct LoginRequest {
 
 #[derive(Default)]
 pub struct AccountProperties {
-
+    pub event_sender: Option<Sender<Event>>,
+    pub friend_requests: Vec<String>,
+    pub friends: Vec<String>,
 }

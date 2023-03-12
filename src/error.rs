@@ -21,9 +21,6 @@ pub enum Error {
     #[error("The {0} is already existing!")]
     AlreadyExisting(String),
 
-    #[error("The entered password is too weak => {0}")]
-    WeakPassword(String),
-
     #[error("Error while generating a JWT")]
     Jwt(#[from] jsonwebtoken::errors::Error),
 
@@ -46,10 +43,16 @@ impl From<trustifier::error::Error> for Error {
             trustifier::error::Error::Argon2(error) => Self::Argon2(error),
             trustifier::error::Error::IllegalPassword(error) => Error::BadRequest(error),
             trustifier::error::Error::IllegalCredentials => Error::InvalidCredentials,
-            trustifier::error::Error::MaxSessionsExceeded => Error::BadRequest(String::from("Max sessions exceeded")),
+            trustifier::error::Error::MaxSessionsExceeded => {
+                Error::BadRequest(String::from("Max sessions exceeded"))
+            }
             trustifier::error::Error::Jwt(error) => Error::Jwt(error),
-            trustifier::error::Error::NoConfigurationFound => Error::Server(String::from("No configuration found!")),
-            trustifier::error::Error::UnauthorizedRequest => Error::Unauthorized(String::from("Unauthorized"))
+            trustifier::error::Error::NoConfigurationFound => {
+                Error::Server(String::from("No configuration found!"))
+            }
+            trustifier::error::Error::UnauthorizedRequest => {
+                Error::Unauthorized(String::from("Unauthorized"))
+            }
         }
     }
 }
@@ -58,7 +61,6 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
     fn respond_to(self, _request: &'r Request<'_>) -> rocket::response::Result<'o> {
         let mut response = rocket::Response::new();
         match &self {
-            Self::WeakPassword(_) => response.set_status(Status::BadRequest),
             Self::AlreadyExisting(_) => response.set_status(Status::BadRequest),
             Self::NotFound(_) => response.set_status(Status::NotFound),
             Self::InvalidCredentials => response.set_status(Status::BadRequest),
@@ -71,14 +73,14 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                 response.set_status(Status::InternalServerError);
                 log::error!("Error while interacting with the API:");
                 log::error!("   - {}", error);
-            },
+            }
             Self::Server(error) => {
                 response.set_status(Status::InternalServerError);
                 log::error!("Error while interacting with the API:");
                 log::error!("   - {}", error);
-            },
+            }
             Self::Unauthorized(_) => response.set_status(Status::Unauthorized),
-            Self::BadRequest(_) => response.set_status(Status::BadRequest)
+            Self::BadRequest(_) => response.set_status(Status::BadRequest),
         }
 
         let content = match response.status().code {

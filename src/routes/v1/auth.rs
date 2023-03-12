@@ -1,22 +1,15 @@
-use chrono::Utc;
 use rocket::{
     serde::json::{serde_json::json, Json, Value},
     Route, State,
 };
 use rocket_okapi::{openapi, openapi_get_routes};
-use trustifier::config::TrustifierConfig;
-use trustifier::models::account::Account;
-use uuid::Uuid;
+use trustifier::{config::TrustifierConfig, models::account::Account};
 
 use crate::{
     database::DatabaseHolder,
     error::Error,
-    representation::{
-        config::GeneralConfig,
-        models::{LoginRequest, RegistrationRequest},
-    },
+    representation::models::{LoginRequest, RegistrationRequest},
 };
-use crate::representation::config::trustifier_config;
 
 /// This is the endpoint for the user login. If you have created an account in the frontend or
 /// over other external APIs, you can login here with your email and password.
@@ -28,8 +21,10 @@ async fn login(
     trustifier_config: &State<TrustifierConfig>,
 ) -> Result<Value, Error> {
     let mut database = database.inner().0.lock();
-    let user = database.find_account_by_email_mut(&request.email).map_err(|_| Error::InvalidCredentials)?;
-    let session = user.login(&trustifier_config, request.password.clone())?;
+    let user = database
+        .find_account_by_email_mut(&request.email)
+        .map_err(|_| Error::InvalidCredentials)?;
+    let session = user.login(trustifier_config, request.password.clone())?;
 
     Ok(json!({
         "code": 200,
@@ -66,7 +61,7 @@ async fn register(
             &config.password_config,
             request.email.clone(),
             request.username.clone(),
-            request.password.clone()
+            request.password.clone(),
         )?)
         .unwrap();
     Ok(json!({

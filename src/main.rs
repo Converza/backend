@@ -3,9 +3,8 @@
 extern crate rocket;
 
 use std::fs;
-use std::fs::File;
+
 use parking_lot::Mutex;
-use rocket::fairing::AdHoc;
 use rocket_okapi::{
     settings::UrlObject,
     swagger_ui::{make_swagger_ui, SwaggerUIConfig},
@@ -14,9 +13,8 @@ use simple_logger::SimpleLogger;
 
 use crate::{
     database::{memory::InMemoryDatabase, DatabaseHolder},
-    representation::config::GeneralConfig,
+    representation::config::{trustifier_config, GeneralConfig},
 };
-use crate::representation::config::trustifier_config;
 
 mod database;
 mod error;
@@ -29,9 +27,9 @@ async fn main() {
 
     let content = match fs::read_to_string("./config.toml") {
         Ok(content) => content,
-        Err(error) => {
+        Err(_) => {
             log::error!("Unable to read config.toml");
-            return;
+            return
         }
     };
 
