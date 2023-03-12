@@ -8,5 +8,5 @@ pub mod models;
 pub enum Event {
     MessageReceived(String),
     FriendRequest(String),
-    FriendRequestAccepted(String)
+    FriendRequestAccepted(String),
 }
