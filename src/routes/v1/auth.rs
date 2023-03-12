@@ -4,6 +4,8 @@ use rocket::{
     Route, State,
 };
 use rocket_okapi::{openapi, openapi_get_routes};
+use trustifier::config::TrustifierConfig;
+use trustifier::models::account::Account;
 use uuid::Uuid;
 
 use crate::{
@@ -11,9 +13,10 @@ use crate::{
     error::Error,
     representation::{
         config::GeneralConfig,
-        models::{LoginRequest, RegistrationRequest, Session, User},
+        models::{LoginRequest, RegistrationRequest},
     },
 };
+use crate::representation::config::trustifier_config;
 
 /// This is the endpoint for the user login. If you have created an account in the frontend or
 /// over other external APIs, you can login here with your email and password.
@@ -22,31 +25,16 @@ use crate::{
 async fn login(
     request: Json<LoginRequest>,
     database: &State<DatabaseHolder>,
-    config: &State<GeneralConfig>,
+    trustifier_config: &State<TrustifierConfig>,
 ) -> Result<Value, Error> {
-    let database = database.inner().0.lock();
-    let user = database.find_user_by_email(&request.email).map_err(|_| Error::InvalidCredentials)?;
-    if !user.is_password_equal(&request.password, &config.hashing)? {
-        return Err(Error::InvalidCredentials)
-    }
-
-    // TODO: Implement lockout (If you fail too many tries, the login get blocked temporary)
-    // TODO: Implement MFA
-
-    let session = Session {
-        user_id: user.id.clone(),
-        id: Uuid::new_v4().to_string(),
-        exp: Utc::now()
-            .checked_add_signed(chrono::Duration::days(config.auth.session_lifetime as i64))
-            .expect("Invalid timestamp")
-            .timestamp(),
-    };
-    let jwt = session.to_jwt(&config.auth)?;
+    let mut database = database.inner().0.lock();
+    let user = database.find_account_by_email_mut(&request.email).map_err(|_| Error::InvalidCredentials)?;
+    let session = user.login(&trustifier_config, request.password.clone())?;
 
     Ok(json!({
         "code": 200,
         "status": "Logged in",
-        "token": jwt
+        "token": session.to_jwt(&trustifier_config.password_config)?
     }))
 }
 
@@ -60,29 +48,25 @@ async fn login(
 async fn register(
     request: Json<RegistrationRequest>,
     database: &State<DatabaseHolder>,
-    config: &State<GeneralConfig>,
+    config: &State<TrustifierConfig>,
 ) -> Result<Value, Error> {
     let mut database = database.inner().0.lock();
-    if database.find_user_by_email(&request.email).is_ok() {
+    if database.find_account_by_email(&request.email).is_ok() {
         return Err(Error::AlreadyExisting(String::from("User")))
     }
 
-    if database.find_user_by_name(&request.username).is_ok() {
+    if database.find_account_by_name(&request.username).is_ok() {
         return Err(Error::AlreadyExisting(String::from("User")))
-    }
-
-    if let Err(error) = config.password.check_password(&request.password) {
-        return Err(Error::WeakPassword(error.to_string()))
     }
 
     // TODO: Invite system
 
     database
-        .register_user(User::new(
+        .register_account(Account::new(
+            &config.password_config,
             request.email.clone(),
             request.username.clone(),
-            request.password.clone(),
-            &config.hashing,
+            request.password.clone()
         )?)
         .unwrap();
     Ok(json!({

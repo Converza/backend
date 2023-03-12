@@ -34,7 +34,24 @@ pub enum Error {
     BadRequest(String),
 
     #[error("{0}")]
-    Server(String)
+    Unauthorized(String),
+
+    #[error("{0}")]
+    Server(String),
+}
+
+impl From<trustifier::error::Error> for Error {
+    fn from(value: trustifier::error::Error) -> Self {
+        match value {
+            trustifier::error::Error::Argon2(error) => Self::Argon2(error),
+            trustifier::error::Error::IllegalPassword(error) => Error::BadRequest(error),
+            trustifier::error::Error::IllegalCredentials => Error::InvalidCredentials,
+            trustifier::error::Error::MaxSessionsExceeded => Error::BadRequest(String::from("Max sessions exceeded")),
+            trustifier::error::Error::Jwt(error) => Error::Jwt(error),
+            trustifier::error::Error::NoConfigurationFound => Error::Server(String::from("No configuration found!")),
+            trustifier::error::Error::UnauthorizedRequest => Error::Unauthorized(String::from("Unauthorized"))
+        }
+    }
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
@@ -59,7 +76,8 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                 response.set_status(Status::InternalServerError);
                 log::error!("Error while interacting with the API:");
                 log::error!("   - {}", error);
-            }
+            },
+            Self::Unauthorized(_) => response.set_status(Status::Unauthorized),
             Self::BadRequest(_) => response.set_status(Status::BadRequest)
         }
 

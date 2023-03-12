@@ -3,6 +3,7 @@ use base64::{engine, Engine};
 use lazy_static::lazy_static;
 use regex::Regex;
 use rocket::serde::Deserialize;
+use trustifier::config::TrustifierConfig;
 
 lazy_static! {
     static ref UPPERCASE_REGEX: Regex = Regex::new("[A-Z]").unwrap();
@@ -116,5 +117,29 @@ impl PasswordConfig {
         }
 
         Ok(())
+    }
+}
+
+pub fn trustifier_config(config: &GeneralConfig) -> TrustifierConfig {
+    TrustifierConfig {
+        max_sessions: 10,
+        session_lifetime: 30,
+        password_config: trustifier::config::PasswordConfig {
+            min_password_length: config.password.min_length,
+            max_password_length: config.password.max_length,
+            require_lowercase: false,
+            require_uppercase: false,
+            require_numbers: false,
+            require_special: false,
+            check_have_i_been_pwned: false,
+            salt_length: config.hashing.salt_length as usize,
+            hash_length: config.hashing.length as u32,
+            hash_lanes: config.hashing.lanes as u32,
+            hash_time_cost: config.hashing.time_cost as u32,
+            hash_memory_cost: config.hashing.memory_cost,
+            secret: config.hashing.secret.clone(),
+            public_key: config.auth.public_key.clone(),
+            private_key: config.auth.private_key.clone(),
+        },
     }
 }

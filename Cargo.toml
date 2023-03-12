@@ -24,6 +24,8 @@ schemars = "0.8.12"
 rust-argon2 = "1.0.0"
 rand = "0.8.5"
 jsonwebtoken = "8.2.0"
+trustifier = { git = "https://github.com/Converza/trustifier.git" }
+serde = "1.0.155"
 
 # Better mutex struct and lazy_static
 lazy_static = "1.4.0"

@@ -1,46 +1,41 @@
-use crate::{database::Database, error::Error, representation::models::User};
+use trustifier::models::account::Account;
+use crate::database::Database;
+use crate::error::Error;
+use crate::representation::models::AccountProperties;
 
 pub struct InMemoryDatabase {
-    users: Vec<User>,
+    accounts: Vec<Account<AccountProperties>>,
 }
 
 impl Database for InMemoryDatabase {
-    fn register_user(&mut self, user: User) -> Result<(), Error> {
-        self.users.push(user);
+    fn register_account(&mut self, account: Account<AccountProperties>) -> Result<(), Error> {
+        self.accounts.push(account);
         Ok(())
     }
 
-    fn find_user_by_id_mut(&mut self, id: &str) -> Result<&mut User, Error> {
-        self.users
-            .iter_mut()
-            .find(|user| user.id.eq(id))
-            .ok_or(Error::NotFound(String::from("User")))
+    fn find_account_by_id_mut(&mut self, id: &str) -> Result<&mut Account<AccountProperties>, Error> {
+        self.accounts.iter_mut().find(|account| account.id.eq(id)).ok_or(Error::NotFound(String::from("User")))
     }
 
-    fn find_user_by_id(&self, id: &str) -> Result<&User, Error> {
-        self.users
-            .iter()
-            .find(|user| user.id.eq(id))
-            .ok_or(Error::NotFound(String::from("User")))
+    fn find_account_by_id(&self, id: &str) -> Result<&Account<AccountProperties>, Error> {
+        self.accounts.iter().find(|account| account.id.eq(id)).ok_or(Error::NotFound(String::from("User")))
     }
 
-    fn find_user_by_email(&self, email: &str) -> Result<&User, Error> {
-        self.users
-            .iter()
-            .find(|user| user.email.eq(email))
-            .ok_or(Error::NotFound(String::from("User")))
+    fn find_account_by_email(&self, email: &str) -> Result<&Account<AccountProperties>, Error> {
+        self.accounts.iter().find(|account| account.email.eq(email)).ok_or(Error::NotFound(String::from("User")))
     }
 
-    fn find_user_by_name(&self, username: &str) -> Result<&User, Error> {
-        self.users
-            .iter()
-            .find(|user| user.username.eq(username))
-            .ok_or(Error::NotFound(String::from("User")))
+    fn find_account_by_email_mut(&mut self, email: &str) -> Result<&mut Account<AccountProperties>, Error> {
+        self.accounts.iter_mut().find(|account| account.email.eq(email)).ok_or(Error::NotFound(String::from("User")))
+    }
+
+    fn find_account_by_name(&self, username: &str) -> Result<&Account<AccountProperties>, Error> {
+        self.accounts.iter().find(|account| account.current_username().eq(username)).ok_or(Error::NotFound(String::from("User")))
     }
 }
 
 impl InMemoryDatabase {
     pub fn new() -> Self {
-        Self { users: Vec::new() }
+        Self { accounts: Vec::new() }
     }
 }

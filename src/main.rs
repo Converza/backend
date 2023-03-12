@@ -2,6 +2,8 @@
 #[macro_use]
 extern crate rocket;
 
+use std::fs;
+use std::fs::File;
 use parking_lot::Mutex;
 use rocket::fairing::AdHoc;
 use rocket_okapi::{
@@ -14,6 +16,7 @@ use crate::{
     database::{memory::InMemoryDatabase, DatabaseHolder},
     representation::config::GeneralConfig,
 };
+use crate::representation::config::trustifier_config;
 
 mod database;
 mod error;
@@ -24,11 +27,22 @@ mod routes;
 async fn main() {
     SimpleLogger::new().init().unwrap();
 
+    let content = match fs::read_to_string("./config.toml") {
+        Ok(content) => content,
+        Err(error) => {
+            log::error!("Unable to read config.toml");
+            return;
+        }
+    };
+
+    let config: GeneralConfig = toml::from_str(&content).unwrap();
+
     let _ = rocket::build()
         .manage(DatabaseHolder(Mutex::new(
             Box::new(InMemoryDatabase::new()),
         ))) // Create In-memory database to test the endpoints TODO: Add configurable MongoDB database
-        .attach(AdHoc::config::<GeneralConfig>()) // Get configuration from Rocket.toml
+        .manage(trustifier_config(&config)) // Trustifier Config
+        .manage(config) // Converza config
         .mount("/v1/friends", routes::v1::friends::routes())
         .mount("/v1/auth", routes::v1::auth::routes())
         .mount("/v1/user", routes::v1::user::routes())

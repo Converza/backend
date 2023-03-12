@@ -3,18 +3,18 @@ use rocket::serde::json::serde_json::{json, Map, Number};
 use rocket::serde::json::Value;
 use rocket_okapi::{openapi, openapi_get_routes};
 use schemars::_serde_json::to_value;
+use trustifier::models::account::Session;
 use crate::database::DatabaseHolder;
 use crate::error::Error;
 use crate::representation::Event;
-use crate::representation::models::Session;
 
 /// This endpoints request a friendship with the specified user. This is an authenticated endpoint.
-#[openapi]
+/*#[openapi]
 #[post("/request", data = "<id>")]
 fn request(session: Session, id: String, database: &State<DatabaseHolder>) -> Result<Value, Error> {
     let mut database = database.inner().0.lock();
-    let user = database.find_user_by_id(&session.user_id)?;
-    let other_user = database.find_user_by_id(&id)?;
+    let user = database.find_account_by_id(&session.user_id)?;
+    let other_user = database.find_account_by_id(&id)?;
 
     if other_user.friend_requests.contains(&user.id) {
         return Err(Error::AlreadyExisting(String::from("Friend Request")))
@@ -24,12 +24,12 @@ fn request(session: Session, id: String, database: &State<DatabaseHolder>) -> Re
         return Err(Error::BadRequest(String::from("That guy is already your friend!")))
     }
     let user_id = user.id.clone();
-    let other_user = database.find_user_by_id_mut(&id)?;
+    let other_user = database.find_account_by_id_mut(&id)?;
 
     // Add friend and send to the other user the information
-    other_user.friend_requests.push(user_id.clone());
-    other_user.sender.send(Event::FriendRequest(user_id))
-        .map_err(|_| Error::Server(String::from("Unable to push friend request event to user!")))?;
+    //other_user.friend_requests.push(user_id.clone());
+    //other_user.sender.send(Event::FriendRequest(user_id))
+    //    .map_err(|_| Error::Server(String::from("Unable to push friend request event to user!")))?;
     Ok(json!({
         "status": "Friend Request sent",
         "code": 200
@@ -81,12 +81,9 @@ fn list(session: Session, database: &State<DatabaseHolder>) -> Result<Value, Err
     map.insert(String::from("friends"), to_value(user.friends.clone()).unwrap());
 
     Ok(Value::Object(map))
-}
+}*/
 
 pub fn routes() -> Vec<Route> {
     openapi_get_routes![
-        request,
-        list,
-        accept_request
     ]
 }
