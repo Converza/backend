@@ -52,6 +52,9 @@ impl From<trustifier::error::Error> for Error {
             }
             trustifier::error::Error::UnauthorizedRequest => {
                 Error::Unauthorized(String::from("Unauthorized"))
+            },
+            trustifier::error::Error::Lockout => {
+                Error::BadRequest(String::from("Your account is currently in a lockout!"))
             }
         }
     }
